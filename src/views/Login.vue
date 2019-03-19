@@ -4,44 +4,46 @@
       <div class="login_header">
         <h2 class="login_logo">硅谷外卖</h2>
         <div class="login_header_title">
-          <a href="javascript:;" class="on">短信登录</a>
-          <a href="javascript:;">密码登录</a>
+          <a href="javascript:;" :class="{on:loginWay}" @click="loginWay=!loginWay">短信登录</a>
+          <a href="javascript:;" :class="{on:!loginWay}" @click="loginWay=!loginWay">密码登录</a>
         </div>
       </div>
       <div class="login_content">
         <form>
-          <div class="on">
+          <div :class="{on:loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号">
-              <button disabled="disabled" class="get_verification">获取验证码</button>
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="pwd">
+              <button :disabled="!isRightPhone||computeTime>0"
+                      :class="{right_phone_number: isRightPhone}"
+                      class="get_verification">{{computeTime>0?`已发送${computeTime}`:'获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="tel" maxlength="8" placeholder="验证码" v-model="captcha">
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
               <a href="javascript:;">《用户服务协议》</a>
             </section>
           </div>
-          <div>
+          <div :class="{on:!loginWay}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name">
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码">
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input :type="isShowPwd?'tel':'password'" maxlength="8" placeholder="密码" v-model="pwd">
+                <div class="switch_button" @click="isShowPwd=!isShowPwd" :class="isShowPwd?'on':'off'">
+                  <div class="switch_circle" :class="{on:isShowPwd}"></div>
+                  <span class="switch_text">{{isShowPwd?'abc':''}}</span>
                 </div>
               </section>
               <section class="login_message">
-                <input type="text" maxlength="11" placeholder="验证码">
+                <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
                 <img class="get_verification" src="../assets/images/captcha.svg" alt="captcha">
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="login">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -53,7 +55,61 @@
 </template>
 
 <script>
-  export default {}
+  export default {
+    data(){
+      return {
+        loginWay:true,
+        phone: '', // 手机号
+        code: '', // 短信验证码
+        name: '', // 用户名
+        pwd: '',  // 密码
+        captcha: '', // 图形验证码
+        computeTime: 0, // 倒计时剩余的时间
+        isShowPwd: false, // 是否显示密码
+      }
+    },
+    computed: {
+      // 是否是一个正确的手机号
+      isRightPhone () {
+        return /^1\d{10}$/.test(this.phone)
+      }
+    },
+    methods:{
+      sendCode () {
+        // alert('sendCode')
+        // 启动倒计时
+        // 更新computeTime为30s
+        this.computeTime = 30
+        // 启动循环定时器, 每隔1s, 将computeTime减1, 直到为0清除定时器
+        const intervalId = setInterval(() => {
+          this.computeTime--
+          if (this.computeTime === 0) {
+            clearInterval(intervalId)
+          }
+        }, 1000)
+      },
+      login () {
+        // 取出表单收集数据
+        const {loginWay, isRightPhone, phone, code, name, pwd, captcha} = this
+        if(loginWay) { // 短信
+          if(!isRightPhone) {
+            return alert('请输入正确的手机号')
+          } else if (!/^\d{6}$/.test(code)) {
+            return alert('验证码必须是6位数字')
+          }
+        } else { // 密码
+          if(!name.trim()) {
+            alert('必须指定用户名')
+          } else if (!pwd.trim()) {
+            alert('必须指定密码')
+          } else if (!/^.{4}$/.test(captcha)) {
+            alert('必须指定4位验证码')
+          }
+        }
+        // 发送登陆的ajax请求
+      }
+    }
+  }
 </script>
 
 <style lang="stylus" rel="stylesheet/stylus" scoped>
@@ -116,6 +172,8 @@
                 color #ccc
                 font-size 14px
                 background transparent
+                &.right_phone_number
+                  color black
             .login_verification
               position relative
               margin-top 16px
@@ -144,7 +202,6 @@
                 &.on
                   background #02a774
                 >.switch_circle
-                //transform translateX(27px)
                   position absolute
                   top -1px
                   left -1px
@@ -155,6 +212,8 @@
                   background #fff
                   box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                   transition transform .3s
+                  &.on
+                    transform translateX(27px)
             .login_hint
               margin-top 12px
               color #999

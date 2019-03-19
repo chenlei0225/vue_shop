@@ -9,9 +9,9 @@
         <div class="user-info">
           <p class="user-info-top">登录/注册</p>
           <p>
-                <span class="user-icon">
-                  <i class="iconfont icon-shouji icon-mobile"></i>
-                </span>
+            <span class="user-icon">
+              <i class="iconfont icon-shouji icon-mobile"></i>
+            </span>
             <span class="icon-mobile-number">暂无绑定手机号</span>
           </p>
         </div>

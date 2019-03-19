@@ -7,12 +7,7 @@
 
 <script>
   import Footer from './components/Footer.vue'
-  import {reqAddress} from './api'
   export default {
-    async mounted(){
-      const result = await reqAddress(116.36867,40.10038)
-      console.log(result);
-    },
     components:{
       Footer
     }
