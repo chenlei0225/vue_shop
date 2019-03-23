@@ -7,7 +7,8 @@
           <i class="iconfont icon-sousuo"></i>
         </span>
         <span class="header_login" slot="right">
-          <span class="header_login_text">登录|注册</span>
+          <span class="header_login_text" v-if="!$store.state.user.user._id">登录|注册</span>
+          <i class="iconfont icon-person" v-else></i>
         </span>
       </Header>
       <!--首页导航-->
@@ -39,8 +40,6 @@
   import 'swiper/dist/css/swiper.css'
   import Swiper from 'swiper'
   import ShopList from '../components/ShopList.vue'
-  import {reqAddress} from '../api'
-
 
   export default {
     data(){
@@ -49,7 +48,10 @@
       }
     },
     computed:{
-      ...mapState(['address','categorys']),
+      ...mapState({
+        address:state => state.msite.address,
+        categorys:state => state.msite.categorys
+      }),
       categorysArr(){
         const {categorys} = this
         const bigArr = []

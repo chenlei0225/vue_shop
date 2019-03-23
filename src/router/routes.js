@@ -6,6 +6,10 @@ import Order from '../views/Order.vue'
 import Profile from '../views/Profile.vue'
 import Search from '../views/Search.vue'
 import Login from '../views/Login.vue'
+import Shop from '../views/Shop/Shop.vue'
+import ShopGoods from '../views/Shop/ShopGoods.vue'
+import ShopRating from '../views/Shop/ShopRating.vue'
+import ShopInfo from '../views/Shop/ShopInfo.vue'
 
 
 export default [
@@ -36,13 +40,32 @@ export default [
     meta:{
       isShow:true
     },
-    children:[]
-
   },
   {
     path:'/login',
     component:Login,
-    children:[]
+  },
+  {
+    path:'/shop',
+    component:Shop,
+    children:[
+      {
+        path:'/shop/goods',
+        component:ShopGoods,
+      },
+      {
+        path:'/shop/ratings',
+        component:ShopRating,
+      },
+      {
+        path:'/shop/info',
+        component:ShopInfo,
+      },
+      {
+        path:'/shop',
+        redirect:'/shop/goods'
+      }
+    ]
   },
   {
     path:'/',

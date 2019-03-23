@@ -10,6 +10,9 @@
   export default {
     components:{
       Footer
+    },
+    mounted(){
+      this.$store.dispatch('get_user')
     }
   }
 </script>

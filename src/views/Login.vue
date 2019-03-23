@@ -12,13 +12,14 @@
         <form>
           <div :class="{on:loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号" v-model="pwd">
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
               <button :disabled="!isRightPhone||computeTime>0"
                       :class="{right_phone_number: isRightPhone}"
-                      class="get_verification">{{computeTime>0?`已发送${computeTime}`:'获取验证码'}}</button>
+                      @click.prevent="sendCode"
+                      class="get_verification">{{computeTime>0?`已发送${computeTime}s`:'获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码" v-model="captcha">
+              <input type="tel" maxlength="8" placeholder="验证码" v-model="code">
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
@@ -39,7 +40,7 @@
               </section>
               <section class="login_message">
                 <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
-                <img class="get_verification" src="../assets/images/captcha.svg" alt="captcha">
+                <img class="get_verification" @click="updateCaptcha" ref="captcha" src="http://localhost:5000/captcha" alt="captcha">
               </section>
             </section>
           </div>
@@ -55,6 +56,7 @@
 </template>
 
 <script>
+  import {reqCode,reqLoginPwd,reqLoginSms} from '../api'
   export default {
     data(){
       return {
@@ -75,7 +77,10 @@
       }
     },
     methods:{
-      sendCode () {
+      updateCaptcha(){
+        this.$refs.captcha.src = 'http://localhost:5000/captcha?time='+ Date.now()
+      },
+      async sendCode () {
         // alert('sendCode')
         // 启动倒计时
         // 更新computeTime为30s
@@ -87,26 +92,48 @@
             clearInterval(intervalId)
           }
         }, 1000)
+        const result = await reqCode(this.phone)
+        if(result.code===0){
+          alert('短信验证码发送成功')
+        }else {
+          this.computeTime=0
+          alert('短信验证码发送失败')
+        }
       },
-      login () {
+      async login () {
         // 取出表单收集数据
         const {loginWay, isRightPhone, phone, code, name, pwd, captcha} = this
+        let result
         if(loginWay) { // 短信
           if(!isRightPhone) {
             return alert('请输入正确的手机号')
           } else if (!/^\d{6}$/.test(code)) {
             return alert('验证码必须是6位数字')
           }
+          result = await reqLoginSms({phone,code})
+          if(result.code===0){
+            this.computeTime=0
+          }
         } else { // 密码
           if(!name.trim()) {
-            alert('必须指定用户名')
+            return alert('必须指定用户名')
           } else if (!pwd.trim()) {
-            alert('必须指定密码')
+            return alert('必须指定密码')
           } else if (!/^.{4}$/.test(captcha)) {
-            alert('必须指定4位验证码')
+            return alert('必须指定4位验证码')
+          }
+          result = await reqLoginPwd({name,pwd,captcha})
+          if(result.code===1){
+            this.updateCaptcha()
           }
         }
-        // 发送登陆的ajax请求
+        if(result.code===0){
+          const user = result.data
+          this.$store.dispatch('request_user',user)
+          this.$router.replace('/profile')
+        }else {
+          alert(result.msg)
+        }
       }
     }
   }
